@@ -1,30 +1,19 @@
-FROM amazonlinux:latest
+FROM alpine:3.6
 
-WORKDIR /
+MAINTAINER C.McKee <pcdevils@gmail.com>
 
-RUN yum update -y
-RUN yum group install "Development Tools" -y
-RUN yum install -y git
-RUN yum install -y python-jinja2 python-paramiko PyYAML make MySQL-python
-RUN yum install -y python-setuptools python-pip
-RUN python-pip install --upgrade pip
-RUN yum install -y gcc
-RUN yum install -y libffi-devel openssl-devel
-RUN yum install python34-devel -y
-RUN yum install python27-devel python27-setuptools python34-setuptools -y
 
-RUN git clone https://github.com/ansible/ansible.git && \
-    cd ansible && \
-    git checkout -b stable-2.4 origin/stable-2.4 && \
-    git submodule update --init --recursive && \
-    make install
-    
-RUN mkdir /etc/ansible/ && \
-    echo "[localhost]" > /etc/ansible/hosts && \
-    echo "localhost ansible_connection=local" >> /etc/ansible/hosts && \
-    echo "export ANSIBLE_INVENTORY=~/ansible_hosts" >> /etc/profile
-    
-RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py" && python2.7 get-pip.py
-RUN pip install ansible-lint
+RUN apk --update add sudo && \
+    apk --update add python py-pip openssl ca-certificates && \
+    apk --update add --virtual build-dependencies python-dev libffi-dev openssl-dev build-base  && \
+    pip install --upgrade pip cffi && \
+    pip install ansible                && \
+    pip install --upgrade pywinrm                  && \
+    apk --update add sshpass openssh-client rsync  && \
+    echo "Purge junk"  && \
+    apk del build-dependencies            && \
+    rm -rf /var/cache/apk/*               && \
+    mkdir -p /etc/ansible                        && \
+    echo 'localhost' > /etc/ansible/hosts
 
-ENTRYPOINT ["/usr/local/bin/ansible-playbook"]
+CMD [ "ansible-playbook", "--version" ]
