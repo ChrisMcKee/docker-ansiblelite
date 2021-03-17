@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM alpine:3
 
 MAINTAINER C.McKee <pcdevils@gmail.com>
 
